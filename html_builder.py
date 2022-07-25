@@ -2,8 +2,8 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import pandas as pd
 
-f = open('main-content.html', encoding='utf-8')
-soup = BeautifulSoup(f.read(), 'html.parser')
+# f = open('main-content.html', encoding='utf-8')
+# soup = BeautifulSoup(f.read(), 'html.parser')
 # soup = BeautifulSoup('', 'html.parser')
 
 # content_text = '''
@@ -19,7 +19,7 @@ soup = BeautifulSoup(f.read(), 'html.parser')
 #                     'https://www.thisiscolossal.com/wp-content/uploads/2022/07/great-woman-painters-en-6328-3d-spread-4-3880.jpg',
 #                     'https://www.thisiscolossal.com/wp-content/uploads/2022/07/great-woman-painters-en-6328-3d-standing-front-3880.jpg']
 csvfile = 'colossal_pageContent.csv'
-df = pd.read_csv(csvfile).loc[:]
+df = pd.read_csv(csvfile)
 df = df.drop(columns='Unnamed: 0')
 
 # for index, row in df.iterrows():
@@ -33,6 +33,8 @@ df = df.drop(columns='Unnamed: 0')
 
 
 def html_building(title,content_text, content_img_list):
+    f = open('main-content.html', encoding='utf-8')
+    soup = BeautifulSoup(f.read(), 'html.parser')
     p_tag = soup.new_tag("p")
     soup.body.append(p_tag)
     soup.body.p.append(content_text)
@@ -51,21 +53,24 @@ def html_building(title,content_text, content_img_list):
                         margin-inline-end: 0px;
                         color: #333333;'''
     # print(soup.prettify())
+    f.close()
     return soup.prettify()
 
     # with open(f'{title}.html', mode='w', encoding='utf-8') as newPage:
     #     newPage.write(soup.prettify())
 
 def main():
+    # f = open('main-content.html', encoding='utf-8')
     content_html= []
     for index, row in df.iterrows():
         title = row['title']
         content_text = row['content_text']
-        content_img_list = str(row['content_img_list']).split(',')
+        content_img_list = str(row['content_img_list']).split(' ')
         # print(content_img_list)
 
         html = html_building(title, content_text, content_img_list)
         content_html.append(html)
+        print(f"已完成{index}")
         print('-' * 20)
     df_html = pd.DataFrame(content_html,columns=['content_html'])
     frames = [df, df_html]

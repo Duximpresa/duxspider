@@ -55,7 +55,7 @@ def colossal_content(url):
     # content_text_list = soup.find('main', attrs={'id': 'posts'}).find_all('p')[0].text
     str = ''
     content_text = str.join(content_text_list)
-    content_img_list = ','.join(tree.xpath("//*[@id='posts']/div/img/@src") + tree.xpath("//*[@id='posts']/p/img/@src"))
+    content_img_list = ' '.join(tree.xpath("//*[@id='posts']/div/img/@src") + tree.xpath("//*[@id='posts']/p/img/@src"))
     # df = pd.DataFrame([url,title,date, author, category, tags, content_text, content_img_list])
 
     zippend = zip([url],[title],[date], [author], [category], [tags], [content_text], [content_img_list])
@@ -80,11 +80,14 @@ def main():
 def main_2():
     frames = []
     dfpage = pd.read_csv("colossal_pageUrl.csv")
+    cont = 0
     for i in dfpage['page_url'][:]:
+        cont += 1
         url = i
         df = colossal_content(url)
         frames.append(df)
-        print(f"已完成{i}")
+        print(f"已完成第{cont}个")
+        print(i)
         print("-" * 10)
         time.sleep(1)
     dfs = pd.concat(frames, ignore_index=True, join='inner')
