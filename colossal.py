@@ -32,16 +32,17 @@ def colossal_pageUrl(url, cont):
 
 
 def colossal_content(url):
-    # headers = {
-    #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
-    # }
-
-    # resp = requests.get(url=url, headers=headers)
-    # print("页面加载完毕")
-    # resp.encoding = "utf-8"
-    # pageSource = resp.text
-    with open("colossal_content.html", mode="r", encoding="utf-8") as f:
-        pageSource = f.read()
+    print("任务开始")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+    }
+    #
+    resp = requests.get(url=url, headers=headers)
+    print("页面加载完毕")
+    resp.encoding = "utf-8"
+    pageSource = resp.text
+    # with open("colossal_content.html", mode="r", encoding="utf-8") as f:
+    #     pageSource = f.read()
 
     tree = etree.HTML(pageSource)
     soup = BeautifulSoup(pageSource,'html.parser')
@@ -54,15 +55,16 @@ def colossal_content(url):
     # content_text_list = soup.find('main', attrs={'id': 'posts'}).find_all('p')[0].text
     str = ''
     content_text = str.join(content_text_list)
-    content_img_list = tree.xpath("//*[@id='posts']/div/img/@src") + tree.xpath("//*[@id='posts']/p/img/@src")
+    content_img_list = ','.join(tree.xpath("//*[@id='posts']/div/img/@src") + tree.xpath("//*[@id='posts']/p/img/@src"))
     # df = pd.DataFrame([url,title,date, author, category, tags, content_text, content_img_list])
 
     zippend = zip([url],[title],[date], [author], [category], [tags], [content_text], [content_img_list])
     dflist = [i for i in zippend]
     columns = ['url','title','date', 'author', 'category', 'tags', 'content_text', 'content_img_list']
     df = pd.DataFrame(dflist, columns=columns)
-    print(df.info)
-    df.to_csv('1.csv', encoding="utf_8_sig")
+    # print(df.info)
+    # df.to_csv('1.csv', encoding="utf_8_sig")
+    return df
 
 def main():
     frames = []
@@ -71,14 +73,24 @@ def main():
         url = f"https://www.thisiscolossal.com/page/{cont}/"
         df = colossal_pageUrl(url, cont)
         frames.append(df)
-
         time.sleep(1)
     dfs = pd.concat(frames, ignore_index=True,)
     dfs.to_csv("colossal_pageUrl.csv", encoding="utf_8_sig")
 
 def main_2():
-    url = 'https://www.thisiscolossal.com/2022/07/great-women-painters-book/'
-    colossal_content(url)
+    frames = []
+    dfpage = pd.read_csv("colossal_pageUrl.csv")
+    for i in dfpage['page_url'][:]:
+        url = i
+        df = colossal_content(url)
+        frames.append(df)
+        print(f"已完成{i}")
+        print("-" * 10)
+        time.sleep(1)
+    dfs = pd.concat(frames, ignore_index=True, join='inner')
+    # dfs = dfs.drop(dfs.columns[0])
+    dfs.to_csv("colossal_pageContent.csv", encoding="utf_8_sig")
+    print('全部完成')
 
 
 if __name__ == "__main__":
