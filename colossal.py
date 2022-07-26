@@ -49,8 +49,10 @@ def colossal_content(url):
     title = tree.xpath("//*[@id='posts']/h2/a/text()")[0]
     author = tree.xpath("//*[@id='posts']/div[@class='post_details singlepost']/h3[@class='author']/a/text()")[0]
     date = tree.xpath("//*[@id='posts']/div[@class='post_details singlepost']/h3[@class='date']/a/text()")[0]
-    category = tree.xpath("//*[@id='posts']/h3[1]/a/text()")
-    tags = tree.xpath("//*[@id='posts']/h3[@class='tags']/a/text()")
+    # category = tree.xpath("//*[@id='posts']/h3[1]/a/text()")
+    category = ' '.join(tree.xpath("//*[@id='posts']/h3[1]/a/text()"))
+    # tags = tree.xpath("//*[@id='posts']/h3[@class='tags']/a/text()")
+    tags = ' '.join(tree.xpath("//*[@id='posts']/h3[@class='tags']/a/text()"))
     content_text_list = tree.xpath("//*[@id='posts']/p//text()")
     # content_text_list = soup.find('main', attrs={'id': 'posts'}).find_all('p')[0].text
     str = ''
