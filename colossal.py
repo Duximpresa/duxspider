@@ -2,10 +2,11 @@ import time
 import requests
 import re
 import pandas as pd
-from time import sleep
 from bs4 import BeautifulSoup
 from lxml import etree
 import os
+from threading import Thread
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 
 def colossal_pageUrl(url, cont):
@@ -156,15 +157,25 @@ def colossal_downloads_tocsv():
     # dfs = dfs.drop(dfs.columns[0])
     # dfs.to_csv("colossal_pageContent.csv", encoding="utf_8_sig")
     print('全部完成')
+def colossal_downloads_tocsv_one(dfiloc):
+    cont = dfiloc['Unnamed: 0']
+    url = dfiloc['page_url']
+    df = colossal_content(url)
+    # df = pd.DataFrame([cont,url])
+    df.to_csv(f"colossal_pageContent/colossal_pageContent_{cont}.csv", encoding="utf_8_sig")
+    print(f"已完成第{cont}个")
+    print(i)
+    print("-" * 10)
+    # time.sleep(1)
 
 
-def colossal_downloads_tocsv222():
-    frames = []
+def colossal_downloads_thread():
     dfpage = pd.read_csv("colossal_pageUrl.csv")
-    # print(dfpage.loc[:])
-    for i in dfpage.iloc:
-        print(i['Unnamed: 0'])
+    with ThreadPoolExecutor(8) as t:
+        for dfiloc in dfpage.iloc:
+            t.submit(colossal_downloads_tocsv_one, dfiloc)
+            # time.sleep(1)
 
 
 if __name__ == "__main__":
-    colossal_downloads_tocsv()
+    colossal_downloads_thread()
