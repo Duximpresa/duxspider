@@ -175,7 +175,29 @@ def colossal_downloads_thread():
         for dfiloc in dfpage.iloc:
             t.submit(colossal_downloads_tocsv_one, dfiloc)
             # time.sleep(1)
+def file_list(patch):
+    file_lists = []
+    for i in os.listdir(patch):
+        if os.path.isfile(patch + "/" + i):
+            file_lists.append(i)
+    return file_lists
+
+
+def csvfile_merge(path):
+    csvFileList = file_list(path)
+    frames = []
+    for i in csvFileList:
+        paths = path + i
+        print(paths)
+        df = pd.read_csv(paths)
+        frames.append(df)
+
+    dfs = pd.concat(frames, ignore_index=True, join='inner')
+    dfs.to_csv("colossal_pageContent.csv", encoding="utf_8_sig")
+
+
 
 
 if __name__ == "__main__":
-    colossal_downloads_thread()
+    path = 'colossal_pageContent/'
+    csvfile_merge(path)
