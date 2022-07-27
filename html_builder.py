@@ -18,7 +18,7 @@ import pandas as pd
 #                     'https://www.thisiscolossal.com/wp-content/uploads/2022/07/great-woman-painters-en-6328-3d-spread-1-3880.jpg',
 #                     'https://www.thisiscolossal.com/wp-content/uploads/2022/07/great-woman-painters-en-6328-3d-spread-4-3880.jpg',
 #                     'https://www.thisiscolossal.com/wp-content/uploads/2022/07/great-woman-painters-en-6328-3d-standing-front-3880.jpg']
-csvfile = 'colossal_pageContent2.csv'
+csvfile = 'colossal_pageContent.csv'
 df = pd.read_csv(csvfile)
 df = df.drop(columns='Unnamed: 0')
 
@@ -76,7 +76,7 @@ def main():
     frames = [df, df_html]
     new_df = pd.concat(frames, axis=1, join='outer',sort=False)
     print(new_df)
-    new_df.to_csv("colossal_pageContentHtml2.csv", encoding="utf_8_sig")
+    new_df.to_csv("colossal_pageContentHtml.csv", encoding="utf_8_sig")
 
 if __name__ == '__main__':
     main()
