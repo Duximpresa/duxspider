@@ -143,7 +143,7 @@ def colossal_downloads_tocsv():
     frames = []
     dfpage = pd.read_csv("colossal_pageUrl.csv")
     # cont = 0
-    for i in dfpage.iloc:
+    for i in dfpage[266:].iloc:
         cont = i['Unnamed: 0']
         url = i['page_url']
         df = colossal_content(url)
@@ -157,6 +157,8 @@ def colossal_downloads_tocsv():
     # dfs = dfs.drop(dfs.columns[0])
     # dfs.to_csv("colossal_pageContent.csv", encoding="utf_8_sig")
     print('全部完成')
+
+
 def colossal_downloads_tocsv_one(dfiloc):
     cont = dfiloc['Unnamed: 0']
     url = dfiloc['page_url']
@@ -171,10 +173,12 @@ def colossal_downloads_tocsv_one(dfiloc):
 
 def colossal_downloads_thread():
     dfpage = pd.read_csv("colossal_pageUrl.csv")
-    with ThreadPoolExecutor(8) as t:
+    with ThreadPoolExecutor(32) as t:
         for dfiloc in dfpage.iloc:
             t.submit(colossal_downloads_tocsv_one, dfiloc)
             # time.sleep(1)
+
+
 def file_list(patch):
     file_lists = []
     for i in os.listdir(patch):
@@ -195,9 +199,95 @@ def csvfile_merge(path):
     dfs = pd.concat(frames, ignore_index=True, join='inner')
     dfs.to_csv("colossal_pageContent.csv", encoding="utf_8_sig")
 
+def img_downloads(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+    }
+    #
+    resp = requests.get(url=url, headers=headers)
+    imgName = url.split('/')[-1]
+    imgContent = resp.content
+    return imgContent, imgName
+
+def delete_text(oriText):
+    del_Text = '''Do stories and artists like this matter to you? Become a Colossal Member today and support 
+    independent arts publishing for as little as $5 per month. You'll connect with a community of like-minded readers 
+    who are passionate about contemporary art, read articles and newsletters ad-free, sustain our interview series, 
+    get discounts and early access to our limited-edition print releases, and much more. Join now! '''
+    text: object = oriText.strip(del_Text)
+    return text
+
+def page_downloads(index, row, main_path):
+    page_path = main_path + f'colossal_page_{index}'
+    title = row['title']
+    date = row['date']
+    author = row['author']
+    category = row['category']
+    tags = row['tags']
+    content_text = row['content_text']
+    content_text = delete_text(content_text)
+    content_img_list = str(row['content_img_list']).split(' ')
+
+    if not os.path.exists(page_path):
+        os.mkdir(page_path)
+
+    fText = open(f'{page_path}/colossal_page_text_{index}.txt', mode='w', encoding='utf-8')
+    fText.write(title)
+    fText.write('\n'+'\n')
+    fText.write(date)
+    fText.write('\n'+'\n')
+    fText.write(author)
+    fText.write('\n' + '\n')
+    fText.write(category)
+    fText.write('\n' + '\n')
 
 
+    fText.write(content_text)
+    fText.close()
+    print(f'已保存文本-{index}')
+
+    for i in content_img_list:
+        img = img_downloads(i)
+        imgContent = img[0]
+        imgName = img[1]
+        fImg = open(f'{page_path}/colossal_page_img_{index}_{imgName}', mode='wb')
+        fImg.write(imgContent)
+        fImg.close()
+        print(f'已保存页面-{index}-图片_{imgName}')
+    
+    ok_list = open('colossal/ok_list.txt', mode='a', encoding='utf-8')
+    ok_list.write(f'{index},')
+
+
+    print("已完成：", page_path)
+    print("-" * 50)
+
+
+
+def page_downloads_thread():
+    main_path = 'colossal2/'
+    csvfile = 'colossal_pageContent.csv'
+    df = pd.read_csv(csvfile)
+    df = df.drop(columns='Unnamed: 0')
+    ok_list = open('colossal/ok_list.txt', mode='w', encoding='utf-8')
+    ok_list.close()
+    with ThreadPoolExecutor(128) as t:
+        for index, row in df[:1].iterrows():
+            t.submit(page_downloads, index, row, main_path)
+    # ok_list = open('colossal/ok_list.txt', mode='r', encoding='utf-8')
+    # ok_list_sort = ok_list.split(',').sort()
+    # ok_list_file = open('colossal/ok_list.txt', mode='w', encoding='utf-8')
+    # ok_list_file.write(','.join(ok_list_sort))
 
 if __name__ == "__main__":
-    path = 'colossal_pageContent/'
-    csvfile_merge(path)
+    # path = 'colossal_pageContent/'
+    # csvfile_merge(path)
+    # colossal_downloads_thread()
+    #
+    # csvfile = 'colossal_pageContent.csv'
+    # main_path = 'colossal/'
+    # df = pd.read_csv(csvfile)
+    # df = df.drop(columns='Unnamed: 0')
+    # for index, row in df[:2].iterrows():
+    #     page_downloads(index, row, main_path)
+    page_downloads_thread()
