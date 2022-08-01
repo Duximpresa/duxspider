@@ -53,7 +53,7 @@ def colossal_content(url):
     # category = tree.xpath("//*[@id='posts']/h3[1]/a/text()")
     category = ' '.join(tree.xpath("//*[@id='posts']/h3[1]/a/text()"))
     # tags = tree.xpath("//*[@id='posts']/h3[@class='tags']/a/text()")
-    tags = ' '.join(tree.xpath("//*[@id='posts']/h3[@class='tags']/a/text()"))
+    tags = '|'.join(tree.xpath("//*[@id='posts']/h3[@class='tags']/a/text()"))
     content_text_list = tree.xpath("//*[@id='posts']/p//text()")
     # content_text_list = soup.find('main', attrs={'id': 'posts'}).find_all('p')[0].text
     str = ''
@@ -224,6 +224,7 @@ def page_downloads(index, row, main_path):
     author = row['author']
     category = row['category']
     tags = row['tags']
+    tags = tags.replace('|', ',')
     content_text = row['content_text']
     content_text = delete_text(content_text)
     content_img_list = str(row['content_img_list']).split(' ')
@@ -240,20 +241,21 @@ def page_downloads(index, row, main_path):
     fText.write('\n' + '\n')
     fText.write(category)
     fText.write('\n' + '\n')
-
+    fText.write(tags)
+    fText.write('\n' + '\n')
 
     fText.write(content_text)
     fText.close()
     print(f'已保存文本-{index}')
 
-    for i in content_img_list:
-        img = img_downloads(i)
-        imgContent = img[0]
-        imgName = img[1]
-        fImg = open(f'{page_path}/colossal_page_img_{index}_{imgName}', mode='wb')
-        fImg.write(imgContent)
-        fImg.close()
-        print(f'已保存页面-{index}-图片_{imgName}')
+    # for i in content_img_list:
+    #     img = img_downloads(i)
+    #     imgContent = img[0]
+    #     imgName = img[1]
+    #     fImg = open(f'{page_path}/colossal_page_img_{index}_{imgName}', mode='wb')
+    #     fImg.write(imgContent)
+    #     fImg.close()
+    #     print(f'已保存页面-{index}-图片_{imgName}')
     
     ok_list = open('colossal/ok_list.txt', mode='a', encoding='utf-8')
     ok_list.write(f'{index},')
@@ -265,7 +267,7 @@ def page_downloads(index, row, main_path):
 
 
 def page_downloads_thread():
-    main_path = 'colossal2/'
+    main_path = 'colossal/'
     csvfile = 'colossal_pageContent.csv'
     df = pd.read_csv(csvfile)
     df = df.drop(columns='Unnamed: 0')
