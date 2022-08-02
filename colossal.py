@@ -225,6 +225,7 @@ def page_downloads(index, row, main_path):
     category = row['category']
     tags = row['tags']
     tags = tags.replace('|', ',')
+    tags = tags.replace('#', '')
     content_text = row['content_text']
     content_text = delete_text(content_text)
     content_img_list = str(row['content_img_list']).split(' ')
@@ -248,14 +249,14 @@ def page_downloads(index, row, main_path):
     fText.close()
     print(f'已保存文本-{index}')
 
-    # for i in content_img_list:
-    #     img = img_downloads(i)
-    #     imgContent = img[0]
-    #     imgName = img[1]
-    #     fImg = open(f'{page_path}/colossal_page_img_{index}_{imgName}', mode='wb')
-    #     fImg.write(imgContent)
-    #     fImg.close()
-    #     print(f'已保存页面-{index}-图片_{imgName}')
+    for i in content_img_list:
+        img = img_downloads(i)
+        imgContent = img[0]
+        imgName = img[1]
+        fImg = open(f'{page_path}/aebanana_page_img_{index}_{imgName}', mode='wb')
+        fImg.write(imgContent)
+        fImg.close()
+        print(f'已保存页面-{index}-图片_{imgName}')
     
     ok_list = open('colossal/ok_list.txt', mode='a', encoding='utf-8')
     ok_list.write(f'{index},')
@@ -274,7 +275,7 @@ def page_downloads_thread():
     ok_list = open('colossal/ok_list.txt', mode='w', encoding='utf-8')
     ok_list.close()
     with ThreadPoolExecutor(128) as t:
-        for index, row in df[:1].iterrows():
+        for index, row in df.iterrows():
             t.submit(page_downloads, index, row, main_path)
     # ok_list = open('colossal/ok_list.txt', mode='r', encoding='utf-8')
     # ok_list_sort = ok_list.split(',').sort()
