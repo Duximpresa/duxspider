@@ -23,21 +23,24 @@ def pageSourceResp(url):
     resp.encoding = "utf-8"
     return resp.status_code, resp.text
 
-def clean_file_name(filename:str):
-    invalid_chars=r'[\\\/:*?"<>|]'
-    replace_char='-'
-    return re.sub(invalid_chars,replace_char,filename)
 
-def biaoqingbao_downloads(url,keyword_path):
+def clean_file_name(filename: str):
+    invalid_chars = r'[\\\/:*?"<>|]'
+    replace_char = '-'
+    return re.sub(invalid_chars, replace_char, filename)
+
+
+def biaoqingbao_downloads(url, keyword_path):
+
     status_code, pageSource = pageSourceResp(url)
+    print(f"开始表情链接：{url}")
     tree = etree.HTML(pageSource)
     link = tree.xpath("//*/img[@class='biaoqingpp']/@src")[0]
     title = tree.xpath("//*/img[@class='biaoqingpp']/@title")[0].split(" - ")[0]
-
-    print(title)
+    # print(title)
     # print(link)
-
     img_download_save(link, title, keyword_path)
+    # print(title)
 
 
 def img_download_save(url, title, keyword_path):
@@ -53,6 +56,7 @@ def img_download_save(url, title, keyword_path):
     fImg = open(f'{keyword_path}/{title}.{file_type}', mode='wb')
     fImg.write(imgContent)
     fImg.close()
+    print(f"已保存：{title}")
 
 
 def biaoqingbao_tag_downloads(count):
@@ -122,7 +126,7 @@ def biaoqingbao_card_downloads_save():
 
 
 def biaoqingbao_tag_downloads_save_thread():
-    with ThreadPoolExecutor(8) as t:
+    with ThreadPoolExecutor(72) as t:
         for i in range(1, 384):
             t.submit(biaoqingbao_tag_downloads_save, i)
 
@@ -146,7 +150,7 @@ def csvfile_merge(path):
     # columns = ["index", "tags_name", "tags_link"]
     dfs = pd.concat(frames, ignore_index=True, join='inner')
     dfs = dfs.drop(columns='Unnamed: 0')
-    dfs.to_csv("biaoqingbao/biaoqingbao_tage_all.csv", encoding="utf_8_sig")
+    dfs.to_csv("biaoqingbao/biaoqingbao_tag_all.csv", encoding="utf_8_sig")
 
 
 def biaoqingbao_keyword(url, keyword, path):
@@ -160,10 +164,10 @@ def biaoqingbao_keyword(url, keyword, path):
         max_page = tree.xpath("//*/div[@class='ui pagination menu']/a/text()")[-2].strip()
         with ThreadPoolExecutor(16) as t:
             for i in range(1, int(max_page) + 1):
-                url = f"{url[:-6]}{i}.html"
-                t.submit(biaoqingbao_keyword_page_down, url, keyword_path)
+                url_ = f"{url[:-6]}{i}.html"
+                # print(url_)
+                t.submit(biaoqingbao_keyword_page_down, url_, keyword_path)
                 # break
-
 
         # columns = ["cards_name", "cards_link"]
         # zippend = zip(cards_name, cards_link)
@@ -176,15 +180,18 @@ def biaoqingbao_keyword(url, keyword, path):
     # return df
 
 
-def biaoqingbao_keyword_page_down(url,keyword_path):
+def biaoqingbao_keyword_page_down(url, keyword_path):
     domain = "https://fabiaoqing.com"
+    print(f"开始页面:{url}")
     status_code, pageSource = pageSourceResp(url)
     if status_code == int(200):
         tree = etree.HTML(pageSource)
         biaoqing_links = tree.xpath("//*/div[@class='ui segment imghover']/div/a/@href")
-        with ThreadPoolExecutor(16) as t:
+        with ThreadPoolExecutor(32) as t:
             for link in biaoqing_links:
+                # print("表情爬取")
                 url = f"{domain}{link}"
+                # print(url)
                 t.submit(biaoqingbao_downloads, url, keyword_path)
 
 
@@ -197,11 +204,17 @@ def biaoqingbao_keyword_page_down(url,keyword_path):
 
 def main():
     path = "biaoqingbao/downloads"
-    url = "https://fabiaoqing.com/tag/detail/id/212/page/1.html"
-    keyword = "猫咪"
+    url = "https://fabiaoqing.com/tag/detail/id/4/page/1.html"
+    keyword = "动图"
     biaoqingbao_keyword(url=url, keyword=keyword, path=path)
     # biaoqingbao_keyword_page_down(url)
 
+
+def main2():
+    path = "biaoqingbao/biaoqingbao_tag/"
+    # biaoqingbao_tag_downloads_save_thread()
+    # csvfile_merge(path)
+    biaoqingbao_card_downloads_save()
 
 if __name__ == '__main__':
     main()
