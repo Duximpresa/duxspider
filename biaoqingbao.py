@@ -24,6 +24,11 @@ def pageSourceResp(url):
     return resp.status_code, resp.text
 
 
+def make_dirs(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+
 def clean_file_name(filename: str):
     invalid_chars = r'[\\\/:*?"<>|]'
     replace_char = '-'
@@ -53,6 +58,22 @@ def img_download_save(url, title, keyword_path):
     imgContent = resp.content
     file_type = imgName.split('.')[-1]
     fImg = open(f'{keyword_path}/{title}.{file_type}', mode='wb')
+    fImg.write(imgContent)
+    fImg.close()
+    print(f"已保存：{title}")
+
+
+def img_download_name_save(title, url, path):
+    # title = clean_file_name(title)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+    }
+    #
+    resp = requests.get(url=url, headers=headers)
+    # imgName = url.split('/')[-1]
+    imgContent = resp.content
+    file_type = url.split('.')[-1]
+    fImg = open(f'{path}/{title}.{file_type}', mode='wb')
     fImg.write(imgContent)
     fImg.close()
     print(f"已保存：{title}")
@@ -152,6 +173,20 @@ def csvfile_merge(path):
     dfs.to_csv("biaoqingbao/biaoqingbao_tag_all.csv", encoding="utf_8_sig")
 
 
+def csvfile_merge_path(path, save_name):
+    csvFileList = file_list(path)
+    frames = []
+    for i in csvFileList:
+        paths = path + i
+        print(paths)
+        df = pd.read_csv(paths)
+        frames.append(df)
+    # columns = ["index", "tags_name", "tags_link"]
+    dfs = pd.concat(frames, ignore_index=True, join='inner')
+    dfs = dfs.drop(columns='Unnamed: 0')
+    dfs.to_csv(save_name, encoding="utf_8_sig")
+
+
 def biaoqingbao_keyword(url, keyword, path):
     keyword_path = path + f'/{keyword}'
     if not os.path.exists(keyword_path):
@@ -167,6 +202,32 @@ def biaoqingbao_keyword(url, keyword, path):
                 # print(url_)
                 t.submit(biaoqingbao_keyword_page_down, url_, keyword_path)
                 # break
+
+        # columns = ["cards_name", "cards_link"]
+        # zippend = zip(cards_name, cards_link)
+        # df_list = [i for i in zippend]
+        # df = pd.DataFrame(df_list, columns=columns)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    # return df
+
+
+def biaoqingbao_name_download(name, link, path):
+    name_path = f"{path}/{name}"
+    make_dirs(name_path)
+    status_code, pageSource = pageSourceResp(link)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        img_links = tree.xpath("//*/div[@class='swiper-wrapper']/div/div/img/@data-original")
+        img_titles = tree.xpath("//*/div[@class='swiper-wrapper']/div/div/img/@title")
+        zippend = zip(img_titles, img_links)
+
+        with ThreadPoolExecutor(8) as t:
+            for img_title, img_link in zippend:
+
+                t.submit(img_download_name_save, img_title, img_link, name_path)
 
         # columns = ["cards_name", "cards_link"]
         # zippend = zip(cards_name, cards_link)
@@ -201,7 +262,7 @@ def biaoqingbao_keyword_page_down(url, keyword_path):
     # return df
 
 
-def biaoqingbao_hot_tag_save_alone(count):
+def biaoqingbao_hot_tag_save_alone(count, path):
     domain = "https://fabiaoqing.com"
     url = f"https://fabiaoqing.com/bqb/lists/type/hot/page/{count}.html"
     status_code, pageSource = pageSourceResp(url)
@@ -216,6 +277,146 @@ def biaoqingbao_hot_tag_save_alone(count):
         zippend = zip(name, link)
         df_list = [i for i in zippend]
         df = pd.DataFrame(df_list, columns=columns)
+        page = str(count).rjust(4, '0')
+        df_name = f"{path}/dfTemp/biaoqingbao_hot_page_{page}.csv"
+        df.to_csv(df_name, encoding="utf_8_sig")
+        # df.to_csv(df_name, encoding="utf-8")
+        print(df_name)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    return df
+
+
+def biaoqingbao_qinglv_tag_save_alone(count, path):
+    domain = "https://fabiaoqing.com"
+    url = f"https://fabiaoqing.com/bqb/lists/type/liaomei/page/{count}.html"
+    status_code, pageSource = pageSourceResp(url)
+    # print(status_code)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        link = tree.xpath("//*/a[@class='bqba']/@href")
+        link = [f"{domain}{i}" for i in link]
+        name = tree.xpath("//*/a[@class='bqba']/div/header/h1/text()")
+
+        columns = ["name", "link"]
+        zippend = zip(name, link)
+        df_list = [i for i in zippend]
+        df = pd.DataFrame(df_list, columns=columns)
+        page = str(count).rjust(4, '0')
+        df_name = f"{path}/dfTemp/biaoqingbao_qinglv_page_{page}.csv"
+        df.to_csv(df_name, encoding="utf_8_sig")
+        # df.to_csv(df_name, encoding="utf-8")
+        print(df_name)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    return df
+
+
+def biaoqingbao_qunliao_tag_save_alone(count, path):
+    domain = "https://fabiaoqing.com"
+    url = f"https://fabiaoqing.com/bqb/lists/type/qunliao/page/{count}.html"
+    status_code, pageSource = pageSourceResp(url)
+    # print(status_code)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        link = tree.xpath("//*/a[@class='bqba']/@href")
+        link = [f"{domain}{i}" for i in link]
+        name = tree.xpath("//*/a[@class='bqba']/div/header/h1/text()")
+
+        columns = ["name", "link"]
+        zippend = zip(name, link)
+        df_list = [i for i in zippend]
+        df = pd.DataFrame(df_list, columns=columns)
+        page = str(count).rjust(4, '0')
+        df_name = f"{path}/dfTemp/biaoqingbao_qunliao_page_{page}.csv"
+        df.to_csv(df_name, encoding="utf_8_sig")
+        # df.to_csv(df_name, encoding="utf-8")
+        print(df_name)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    return df
+
+
+def biaoqingbao_doutu_tag_save_alone(count, path):
+    domain = "https://fabiaoqing.com"
+    url = f"https://fabiaoqing.com/bqb/lists/type/doutu/page/{count}.html"
+    status_code, pageSource = pageSourceResp(url)
+    # print(status_code)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        link = tree.xpath("//*/a[@class='bqba']/@href")
+        link = [f"{domain}{i}" for i in link]
+        name = tree.xpath("//*/a[@class='bqba']/div/header/h1/text()")
+
+        columns = ["name", "link"]
+        zippend = zip(name, link)
+        df_list = [i for i in zippend]
+        df = pd.DataFrame(df_list, columns=columns)
+        page = str(count).rjust(4, '0')
+        df_name = f"{path}/dfTemp/biaoqingbao_doutu_page_{page}.csv"
+        df.to_csv(df_name, encoding="utf_8_sig")
+        # df.to_csv(df_name, encoding="utf-8")
+        print(df_name)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    return df
+
+
+def biaoqingbao_duiren_tag_save_alone(count, path):
+    domain = "https://fabiaoqing.com"
+    url = f"https://fabiaoqing.com/bqb/lists/type/duiren/page/{count}.html"
+    status_code, pageSource = pageSourceResp(url)
+    # print(status_code)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        link = tree.xpath("//*/a[@class='bqba']/@href")
+        link = [f"{domain}{i}" for i in link]
+        name = tree.xpath("//*/a[@class='bqba']/div/header/h1/text()")
+
+        columns = ["name", "link"]
+        zippend = zip(name, link)
+        df_list = [i for i in zippend]
+        df = pd.DataFrame(df_list, columns=columns)
+        page = str(count).rjust(4, '0')
+        df_name = f"{path}/dfTemp/biaoqingbao_duiren_page_{page}.csv"
+        df.to_csv(df_name, encoding="utf_8_sig")
+        # df.to_csv(df_name, encoding="utf-8")
+        print(df_name)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    return df
+
+
+def biaoqingbao_emoji_tag_save_alone(count, path):
+    domain = "https://fabiaoqing.com"
+    url = f"https://fabiaoqing.com/bqb/lists/type/emoji/page/{count}.html"
+    status_code, pageSource = pageSourceResp(url)
+    # print(status_code)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        link = tree.xpath("//*/a[@class='bqba']/@href")
+        link = [f"{domain}{i}" for i in link]
+        name = tree.xpath("//*/a[@class='bqba']/div/header/h1/text()")
+
+        columns = ["name", "link"]
+        zippend = zip(name, link)
+        df_list = [i for i in zippend]
+        df = pd.DataFrame(df_list, columns=columns)
+        page = str(count).rjust(4, '0')
+        df_name = f"{path}/dfTemp/biaoqingbao_emoji_page_{page}.csv"
+        df.to_csv(df_name, encoding="utf_8_sig")
+        # df.to_csv(df_name, encoding="utf-8")
+        print(df_name)
     else:
         df = pd.DataFrame([], columns=columns)
         print(status_code)
@@ -224,10 +425,100 @@ def biaoqingbao_hot_tag_save_alone(count):
 
 
 def biaoqingbao_hot_tag_save_all():
-    path = "biaoqingbao/downloads"
-    for i in range(1, 2):
-        df = biaoqingbao_hot_tag_save_alone(i)
-        print(df)
+    path = "biaoqingbao/downloads/hot"
+    dfTemp_path = f"{path}/dfTemp"
+    make_dirs(path)
+    make_dirs(dfTemp_path)
+
+    with ThreadPoolExecutor(8) as t:
+        for i in range(1, 101):
+            t.submit(biaoqingbao_hot_tag_save_alone, i, path)
+    time.sleep(5)
+    save_name = f"{path}/biaoqingbao_hot_tag_save_all.csv"
+    csvfile_merge_path(f"{dfTemp_path}/", save_name)
+
+
+def biaoqingbao_qinglv_tag_save_all():
+    path = "biaoqingbao/downloads/qinglv"
+    dfTemp_path = f"{path}/dfTemp"
+    make_dirs(path)
+    make_dirs(dfTemp_path)
+
+    with ThreadPoolExecutor(8) as t:
+        for i in range(1, 34):
+            t.submit(biaoqingbao_qinglv_tag_save_alone, i, path)
+    time.sleep(5)
+    save_name = f"{path}/biaoqingbao_qinglv_tag_save_all.csv"
+    csvfile_merge_path(f"{dfTemp_path}/", save_name)
+
+
+def biaoqingbao_qunliao_tag_save_all():
+    path = "biaoqingbao/downloads/qunliao"
+    dfTemp_path = f"{path}/dfTemp"
+    make_dirs(path)
+    make_dirs(dfTemp_path)
+
+    with ThreadPoolExecutor(8) as t:
+        for i in range(1, 22):
+            t.submit(biaoqingbao_qunliao_tag_save_alone, i, path)
+    time.sleep(5)
+    save_name = f"{path}/biaoqingbao_qunliao_tag_save_all.csv"
+    csvfile_merge_path(f"{dfTemp_path}/", save_name)
+
+
+def biaoqingbao_doutu_tag_save_all():
+    path = "biaoqingbao/downloads/doutu"
+    dfTemp_path = f"{path}/dfTemp"
+    make_dirs(path)
+    make_dirs(dfTemp_path)
+
+    with ThreadPoolExecutor(8) as t:
+        for i in range(1, 121):
+            t.submit(biaoqingbao_doutu_tag_save_alone, i, path)
+    time.sleep(5)
+    save_name = f"{path}/biaoqingbao_doutu_tag_save_all.csv"
+    csvfile_merge_path(f"{dfTemp_path}/", save_name)
+
+
+def biaoqingbao_duiren_tag_save_all():
+    path = "biaoqingbao/downloads/duiren"
+    dfTemp_path = f"{path}/dfTemp"
+    make_dirs(path)
+    make_dirs(dfTemp_path)
+
+    with ThreadPoolExecutor(8) as t:
+        for i in range(1, 19):
+            t.submit(biaoqingbao_duiren_tag_save_alone, i, path)
+    time.sleep(5)
+    save_name = f"{path}/biaoqingbao_duiren_tag_save_all.csv"
+    csvfile_merge_path(f"{dfTemp_path}/", save_name)
+
+
+def biaoqingbao_emoji_tag_save_all():
+    path = "biaoqingbao/downloads/emoji"
+    dfTemp_path = f"{path}/dfTemp"
+    make_dirs(path)
+    make_dirs(dfTemp_path)
+
+    with ThreadPoolExecutor(8) as t:
+        for i in range(1, 13):
+            t.submit(biaoqingbao_emoji_tag_save_alone, i, path)
+    time.sleep(5)
+    save_name = f"{path}/biaoqingbao_emoji_tag_save_all.csv"
+    csvfile_merge_path(f"{dfTemp_path}/", save_name)
+
+
+def biaoqingbao_downloads_keyword(type):
+    path = f"biaoqingbao/downloads/{type}"
+    df_file = f"{path}/biaoqingbao_{type}_tag_save_all.csv"
+    df = pd.read_csv(df_file)
+    df = df.drop(columns='Unnamed: 0')
+    # print(df)
+    for index, row in df[0:1].iterrows():
+        name = row["name"]
+        link = row["link"]
+        biaoqingbao_name_download(name, link, path)
+
 
 def main():
     path = "biaoqingbao/downloads"
@@ -245,7 +536,18 @@ def main2():
 
 
 def main3():
-    biaoqingbao_hot_tag_save_all()
+    # biaoqingbao_hot_tag_save_all()
+    biaoqingbao_qinglv_tag_save_all()
+    biaoqingbao_qunliao_tag_save_all()
+    biaoqingbao_duiren_tag_save_all()
+    biaoqingbao_emoji_tag_save_all()
+    biaoqingbao_doutu_tag_save_all()
+
+
+def main4():
+    type = "qinglv"
+    biaoqingbao_downloads_keyword(type)
+
 
 if __name__ == '__main__':
-    main3()
+    main4()
