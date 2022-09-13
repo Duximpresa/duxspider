@@ -31,7 +31,6 @@ def clean_file_name(filename: str):
 
 
 def biaoqingbao_downloads(url, keyword_path):
-
     status_code, pageSource = pageSourceResp(url)
     print(f"开始表情链接：{url}")
     tree = etree.HTML(pageSource)
@@ -111,7 +110,7 @@ def biaoqingbao_tag_downloads_save(count):
     path = "biaoqingbao/biaoqingbao_tag/"
     df = biaoqingbao_tag_downloads(count)
     page = str(count).rjust(4, '0')
-    df_name = f"{path}baioqingbao_tage_page_{page}.csv"
+    df_name = f"{path}baioqingbao_tag_page_{page}.csv"
     print(df_name)
     df.to_csv(df_name)
 
@@ -202,10 +201,38 @@ def biaoqingbao_keyword_page_down(url, keyword_path):
     # return df
 
 
+def biaoqingbao_hot_tag_save_alone(count):
+    domain = "https://fabiaoqing.com"
+    url = f"https://fabiaoqing.com/bqb/lists/type/hot/page/{count}.html"
+    status_code, pageSource = pageSourceResp(url)
+    # print(status_code)
+    if status_code == int(200):
+        tree = etree.HTML(pageSource)
+        link = tree.xpath("//*/a[@class='bqba']/@href")
+        link = [f"{domain}{i}" for i in link]
+        name = tree.xpath("//*/a[@class='bqba']/div/header/h1/text()")
+
+        columns = ["name", "link"]
+        zippend = zip(name, link)
+        df_list = [i for i in zippend]
+        df = pd.DataFrame(df_list, columns=columns)
+    else:
+        df = pd.DataFrame([], columns=columns)
+        print(status_code)
+
+    return df
+
+
+def biaoqingbao_hot_tag_save_all():
+    path = "biaoqingbao/downloads"
+    for i in range(1, 2):
+        df = biaoqingbao_hot_tag_save_alone(i)
+        print(df)
+
 def main():
     path = "biaoqingbao/downloads"
-    url = "https://fabiaoqing.com/tag/detail/id/4/page/1.html"
-    keyword = "动图"
+    url = "https://fabiaoqing.com/tag/detail/id/32/page/1.html"
+    keyword = "智障"
     biaoqingbao_keyword(url=url, keyword=keyword, path=path)
     # biaoqingbao_keyword_page_down(url)
 
@@ -213,8 +240,12 @@ def main():
 def main2():
     path = "biaoqingbao/biaoqingbao_tag/"
     # biaoqingbao_tag_downloads_save_thread()
-    # csvfile_merge(path)
-    biaoqingbao_card_downloads_save()
+    csvfile_merge(path)
+    # biaoqingbao_card_downloads_save()
+
+
+def main3():
+    biaoqingbao_hot_tag_save_all()
 
 if __name__ == '__main__':
-    main()
+    main3()
