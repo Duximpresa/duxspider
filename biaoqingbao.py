@@ -514,8 +514,9 @@ def biaoqingbao_downloads_keyword(type):
     df = pd.read_csv(df_file)
     df = df.drop(columns='Unnamed: 0')
     # print(df)
-    for index, row in df[0:1].iterrows():
+    for index, row in df.iterrows():
         name = row["name"]
+        name = clean_file_name(name)
         link = row["link"]
         biaoqingbao_name_download(name, link, path)
 
