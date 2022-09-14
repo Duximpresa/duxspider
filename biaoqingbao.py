@@ -224,7 +224,7 @@ def biaoqingbao_name_download(name, link, path):
         img_titles = tree.xpath("//*/div[@class='swiper-wrapper']/div/div/img/@title")
         zippend = zip(img_titles, img_links)
 
-        with ThreadPoolExecutor(8) as t:
+        with ThreadPoolExecutor(16) as t:
             for img_title, img_link in zippend:
 
                 t.submit(img_download_name_save, img_title, img_link, name_path)
@@ -537,7 +537,7 @@ def main2():
 
 
 def main3():
-    # biaoqingbao_hot_tag_save_all()
+    biaoqingbao_hot_tag_save_all()
     biaoqingbao_qinglv_tag_save_all()
     biaoqingbao_qunliao_tag_save_all()
     biaoqingbao_duiren_tag_save_all()
@@ -546,8 +546,10 @@ def main3():
 
 
 def main4():
-    type = "qinglv"
-    biaoqingbao_downloads_keyword(type)
+    type = "hot"
+    type_list = ["qinglv","qunliao","duiren","emoji","doutu"]
+    for type in type_list:
+        biaoqingbao_downloads_keyword(type)
 
 
 if __name__ == '__main__':
