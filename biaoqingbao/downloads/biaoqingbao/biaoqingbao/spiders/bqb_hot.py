@@ -8,7 +8,7 @@ class BqbHotSpider(scrapy.Spider):
     start_urls = ['https://fabiaoqing.com/bqb/lists/type/hot/page/1.html']
 
     def start_requests(self):
-        for i in range(1, 10):
+        for i in range(1, 51):
             url = f"https://fabiaoqing.com/bqb/lists/type/hot/page/{i}.html"
             yield Request(url)
 

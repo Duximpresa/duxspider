@@ -68,6 +68,7 @@ ITEM_PIPELINES = {
 }
 
 IMAGES_STORE = "./downloads"
+FILES_STORE = "./downloads"
 MEDIA_ALLOW_REDIRECTS = True
 
 # Enable and configure the AutoThrottle extension (disabled by default)

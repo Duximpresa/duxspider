@@ -28,7 +28,7 @@ def clean_file_name(filename: str):
     replace_char = '_'
     return re.sub(invalid_chars, replace_char, filename)
 
-class BiaoqingbaoPipeline(ImagesPipeline):
+class BiaoqingbaoPipeline(FilesPipeline):
     def get_media_requests(self, item, info):
         img = item["img"]
         title = item["title"]
@@ -44,8 +44,10 @@ class BiaoqingbaoPipeline(ImagesPipeline):
         img_title = clean_file_name(img_title)
         img_src = request.meta["img_src"]
         suffix = img_src.split(".")[-1]
+        code4 = img_src.split(".")[-2][-5:-1]
         title = request.meta["title"]
-        file_path =  f"hot/{title}/{img_title}.{suffix}"
+        title = clean_file_name(title)
+        file_path =  f"hot/{title}/{img_title}_{code4}.{suffix}"
         print(file_path)
         return file_path
 
