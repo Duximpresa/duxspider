@@ -8,7 +8,7 @@ class BqbHotSpider(scrapy.Spider):
     start_urls = ['https://fabiaoqing.com/bqb/lists/type/hot/page/1.html']
 
     def start_requests(self):
-        for i in range(1, 2):
+        for i in range(1, 10):
             url = f"https://fabiaoqing.com/bqb/lists/type/hot/page/{i}.html"
             yield Request(url)
 
@@ -18,7 +18,7 @@ class BqbHotSpider(scrapy.Spider):
         for href in hrefs:
             href = resp.urljoin(href)
             yield Request(href, callback=self.parse2)
-            break
+            # break
 
     def parse2(self, resp, **kwargs):
         title = resp.xpath("//h1[@class='ui header']/text()").extract_first()

@@ -67,6 +67,9 @@ ITEM_PIPELINES = {
    'biaoqingbao.pipelines.BiaoqingbaoPipeline': 300,
 }
 
+IMAGES_STORE = "./downloads"
+MEDIA_ALLOW_REDIRECTS = True
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True

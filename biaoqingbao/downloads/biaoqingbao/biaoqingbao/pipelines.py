@@ -1,5 +1,7 @@
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.pipelines.files import FilesPipeline
+from scrapy import Request
+import re
 
 # Define your item pipelines here
 #
@@ -21,12 +23,32 @@ from itemadapter import ItemAdapter
 #
 #         return item
 
+def clean_file_name(filename: str):
+    invalid_chars = r'[\\\/:*?"<>|]'
+    replace_char = '_'
+    return re.sub(invalid_chars, replace_char, filename)
+
 class BiaoqingbaoPipeline(ImagesPipeline):
     def get_media_requests(self, item, info):
-        pass
+        img = item["img"]
+        title = item["title"]
+        # print(title)
+        for img_title, img_src in img:
+            # print(img_title)
+            yield Request(img_src, meta={"img_title": img_title, "img_src": img_src, "title": title})
+
 
     def file_path(self, request, response=None, info=None, *, item=None):
-        pass
+        # print("接收到一条数据", request)
+        img_title = request.meta["img_title"]
+        img_title = clean_file_name(img_title)
+        img_src = request.meta["img_src"]
+        suffix = img_src.split(".")[-1]
+        title = request.meta["title"]
+        file_path =  f"hot/{title}/{img_title}.{suffix}"
+        print(file_path)
+        return file_path
+
 
     def item_completed(self, results, item, info):
-        pass
+        return item
